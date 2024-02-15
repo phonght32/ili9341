@@ -141,7 +141,7 @@ err_code_t ili9341_write_char(ili9341_handle_t handle, font_size_t font_size, ui
 err_code_t ili9341_write_string(ili9341_handle_t handle, font_size_t font_size, uint8_t *str, uint32_t color);
 
 /**
- * @brief   Write pixel.
+ * @brief   Draw pixel.
  *
  * @param   handle Handle structure.
  * @param   x Horizontal position.
@@ -155,7 +155,7 @@ err_code_t ili9341_write_string(ili9341_handle_t handle, font_size_t font_size, 
 err_code_t ili9341_draw_pixel(ili9341_handle_t handle, uint16_t x, uint16_t y, uint32_t color);
 
 /**
- * @brief   Write line.
+ * @brief   Draw line.
  *
  * @param   handle Handle structure.
  * @param   x1 The first horizontal position.
@@ -171,7 +171,7 @@ err_code_t ili9341_draw_pixel(ili9341_handle_t handle, uint16_t x, uint16_t y, u
 err_code_t ili9341_draw_line(ili9341_handle_t handle, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint32_t color);
 
 /**
- * @brief   Write rectangle.
+ * @brief   Draw rectangle.
  *
  * @param   handle Handle structure.
  * @param   x_origin Origin horizontal position.
@@ -187,7 +187,7 @@ err_code_t ili9341_draw_line(ili9341_handle_t handle, uint16_t x1, uint16_t y1, 
 err_code_t ili9341_draw_rectangle(ili9341_handle_t handle, uint16_t x_origin, uint16_t y_origin, uint16_t width, uint16_t height, uint32_t color);
 
 /**
- * @brief   Write Circle.
+ * @brief   Draw Circle.
  *
  * @param   handle Handle structure.
  * @param   x_origin Origin horizontal position.
