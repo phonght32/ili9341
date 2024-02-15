@@ -187,7 +187,7 @@ err_code_t ili9341_draw_line(ili9341_handle_t handle, uint16_t x1, uint16_t y1, 
 err_code_t ili9341_draw_rectangle(ili9341_handle_t handle, uint16_t x_origin, uint16_t y_origin, uint16_t width, uint16_t height, uint32_t color);
 
 /**
- * @brief   Draw Circle.
+ * @brief   Draw circle.
  *
  * @param   handle Handle structure.
  * @param   x_origin Origin horizontal position.
