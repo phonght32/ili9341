@@ -31,10 +31,10 @@ extern "C" {
 #include "err_code.h"
 #include "fonts.h"
 
-typedef err_code_t (*ili9341_spi_send)(uint8_t *buf_send, uint32_t len, uint32_t timeout_ms);
+typedef err_code_t (*ili9341_spi_send)(uint8_t *buf_send, uint32_t len);
 typedef err_code_t (*ili9341_set_dc)(uint8_t level);
 typedef err_code_t (*ili9341_set_rst)(uint8_t level);
-typedef err_code_t (*ili9341_delay)(uint32_t delay_ms);
+typedef void (*ili9341_delay)(uint32_t delay_ms);
 
 /**
  * @brief   Handle structure.

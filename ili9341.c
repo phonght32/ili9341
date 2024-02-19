@@ -4,7 +4,6 @@
 
 #define SPI_PARALLEL_LINES  		16
 #define MAX_LINE_BUF  				2
-#define SPI_TIMEOUT_MS 				100
 
 #define ILI3941_RST_ACTIVE_LEVEL 	0
 #define ILI3941_RST_UNACTIVE_LEVEL 	1
@@ -161,7 +160,7 @@ static err_code_t ili9341_write_cmd(ili9341_handle_t handle, uint8_t cmd)
 	handle->set_dc(0);
 
 	/* Transfer command */
-	handle->spi_send(&cmd, 1, SPI_TIMEOUT_MS);
+	handle->spi_send(&cmd, 1);
 
 	return ERR_CODE_SUCCESS;
 }
@@ -172,7 +171,7 @@ static err_code_t ili9341_write_data(ili9341_handle_t handle, uint8_t *data, uin
 	handle->set_dc(1);
 
 	/* Transfer data */
-	handle->spi_send(data, len, SPI_TIMEOUT_MS);
+	handle->spi_send(data, len);
 
 	return ERR_CODE_SUCCESS;
 }
