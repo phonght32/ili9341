@@ -32,6 +32,7 @@ extern "C" {
 #include "fonts.h"
 
 typedef err_code_t (*ili9341_spi_send)(uint8_t *buf_send, uint32_t len);
+typedef err_code_t (*ili9341_set_cs)(uint8_t level);
 typedef err_code_t (*ili9341_set_dc)(uint8_t level);
 typedef err_code_t (*ili9341_set_rst)(uint8_t level);
 typedef void (*ili9341_delay)(uint32_t delay_ms);
@@ -48,6 +49,7 @@ typedef struct {
     uint16_t                height;             /*!< Screen height */
     uint16_t                width;              /*!< Screen width */
     ili9341_spi_send        spi_send;           /*!< Function send SPI */
+    ili9341_set_cs          set_cs;             /*!< Function set pin CS */
     ili9341_set_dc          set_dc;             /*!< Function set pin DC */
     ili9341_set_rst         set_rst;            /*!< Function set pin RST */
     ili9341_delay           delay;              /*!< Function delay */

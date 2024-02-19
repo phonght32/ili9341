@@ -8,6 +8,10 @@
 #define ILI3941_RST_ACTIVE_LEVEL 	0
 #define ILI3941_RST_UNACTIVE_LEVEL 	1
 
+#define ILI3941_CS_ACTIVE_LEVEL 	0
+#define ILI3941_CS_UNACTIVE_LEVEL 	1
+
+
 /**
  * @struct  LCD configuration structure.
  */
@@ -88,6 +92,7 @@ typedef struct ili9341 {
 	uint16_t 				height;					/*!< Screen height */
 	uint16_t 				width;					/*!< Screen width */
 	ili9341_spi_send 		spi_send;				/*!< Function send SPI */
+	ili9341_set_cs          set_cs;             	/*!< Function set pin CS */
 	ili9341_set_dc 			set_dc;					/*!< Function set pin DC */
 	ili9341_set_rst			set_rst;				/*!< Function set pin RST */
 	ili9341_delay 			delay;					/*!< Function delay */
@@ -156,22 +161,42 @@ static void write_line(ili9341_handle_t handle, uint16_t x1, uint16_t y1, uint16
 
 static err_code_t ili9341_write_cmd(ili9341_handle_t handle, uint8_t cmd)
 {
+	if (handle->set_cs != NULL)
+	{
+		handle->set_cs(ILI3941_CS_ACTIVE_LEVEL);
+	}
+
 	/* DC level equal to 0 when write SPI command */
 	handle->set_dc(0);
 
 	/* Transfer command */
 	handle->spi_send(&cmd, 1);
 
+	if (handle->set_cs != NULL)
+	{
+		handle->set_cs(ILI3941_CS_UNACTIVE_LEVEL);
+	}
+
 	return ERR_CODE_SUCCESS;
 }
 
 static err_code_t ili9341_write_data(ili9341_handle_t handle, uint8_t *data, uint32_t len)
 {
+	if (handle->set_cs != NULL)
+	{
+		handle->set_cs(ILI3941_CS_ACTIVE_LEVEL);
+	}
+
 	/* DC level equal to 1 when write SPI data */
 	handle->set_dc(1);
 
 	/* Transfer data */
 	handle->spi_send(data, len);
+
+	if (handle->set_cs != NULL)
+	{
+		handle->set_cs(ILI3941_CS_UNACTIVE_LEVEL);
+	}
 
 	return ERR_CODE_SUCCESS;
 }
@@ -183,10 +208,10 @@ static err_code_t ili9341_display_lines(ili9341_handle_t handle, uint16_t ypos, 
 	/* Command set column address */
 	ili9341_write_cmd(handle, 0x2A);
 
-	buf[0] = 0;					/* Start column high */
-	buf[1] = 0;					/* Start column low */
-	buf[2] = handle->width >> 8;		/* End column high */
-	buf[3] = handle->width & 0xFF;		/* End column low */
+	buf[0] = 0;									/* Start column high */
+	buf[1] = 0;									/* Start column low */
+	buf[2] = handle->width >> 8;				/* End column high */
+	buf[3] = handle->width & 0xFF;				/* End column low */
 	ili9341_write_data(handle, buf, 4);
 
 	/* Command set page address */
@@ -231,6 +256,7 @@ err_code_t ili9341_set_config(ili9341_handle_t handle, ili9341_cfg_t config)
 	handle->width = config.width;
 	handle->height = config.height;
 	handle->spi_send = config.spi_send;
+	handle->set_cs = config.set_cs;
 	handle->set_dc = config.set_dc;
 	handle->set_rst = config.set_rst;
 	handle->delay = config.delay;
