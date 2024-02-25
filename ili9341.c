@@ -93,8 +93,9 @@ typedef struct ili9341 {
 	uint16_t 				width;					/*!< Screen width */
 	ili9341_spi_send 		spi_send;				/*!< Function send SPI */
 	ili9341_set_gpio        set_cs;             	/*!< Function set pin CS */
-    ili9341_set_gpio        set_dc;             	/*!< Function set pin DC */
-    ili9341_set_gpio        set_rst;            	/*!< Function set pin RST */
+	ili9341_set_gpio        set_dc;             	/*!< Function set pin DC */
+	ili9341_set_gpio        set_rst;            	/*!< Function set pin RST */
+	ili9341_set_gpio        set_bckl;           	/*!< Function on/off LED */
 	ili9341_delay 			delay;					/*!< Function delay */
 	uint8_t 				*data;					/*!< Screen buffer */
 	lines_t 				lines[MAX_LINE_BUF];	/*!< Lines buffer */
@@ -259,6 +260,7 @@ err_code_t ili9341_set_config(ili9341_handle_t handle, ili9341_cfg_t config)
 	handle->set_cs = config.set_cs;
 	handle->set_dc = config.set_dc;
 	handle->set_rst = config.set_rst;
+	handle->set_bckl = config.set_bckl;
 	handle->delay = config.delay;
 
 
@@ -552,6 +554,38 @@ err_code_t ili9341_get_position(ili9341_handle_t handle, uint16_t *x, uint16_t *
 
 	*x = handle->pos_x;
 	*y = handle->pos_y;
+
+	return ERR_CODE_SUCCESS;
+}
+
+err_code_t ili9341_set_bckl_on(ili9341_handle_t handle)
+{
+	/* Check if handle structure is NULL */
+	if (handle == NULL)
+	{
+		return ERR_CODE_NULL_PTR;
+	}
+
+	if (handle->set_bckl != NULL)
+	{
+		handle->set_bckl(1);
+	}
+
+	return ERR_CODE_SUCCESS;
+}
+
+err_code_t ili9341_set_bckl_off(ili9341_handle_t handle)
+{
+	/* Check if handle structure is NULL */
+	if (handle == NULL)
+	{
+		return ERR_CODE_NULL_PTR;
+	}
+
+	if (handle->set_bckl != NULL)
+	{
+		handle->set_bckl(0);
+	}
 
 	return ERR_CODE_SUCCESS;
 }

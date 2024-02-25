@@ -50,6 +50,7 @@ typedef struct {
     ili9341_set_gpio        set_cs;             /*!< Function set pin CS */
     ili9341_set_gpio        set_dc;             /*!< Function set pin DC */
     ili9341_set_gpio        set_rst;            /*!< Function set pin RST */
+    ili9341_set_gpio        set_bckl;           /*!< Function on/off LED backlight */
     ili9341_delay           delay;              /*!< Function delay */
 } ili9341_cfg_t;
 
@@ -226,6 +227,28 @@ err_code_t ili9341_set_position(ili9341_handle_t handle, uint16_t x, uint16_t y)
  *      - Others:           Fail.
  */
 err_code_t ili9341_get_position(ili9341_handle_t handle, uint16_t *x, uint16_t *y);
+
+/**
+ * @brief   Turn on LED backlight.
+ *
+ * @param   handle Handle structure.
+ *
+ * @return
+ *      - ERR_CODE_SUCCESS: Success.
+ *      - Others:           Fail.
+ */
+err_code_t ili9341_set_bckl_on(ili9341_handle_t handle);
+
+/**
+ * @brief   Turn off LED backlight.
+ *
+ * @param   handle Handle structure.
+ *
+ * @return
+ *      - ERR_CODE_SUCCESS: Success.
+ *      - Others:           Fail.
+ */
+err_code_t ili9341_set_bckl_off(ili9341_handle_t handle);
 
 /*
  * @brief   Get screen buffer.
