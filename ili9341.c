@@ -92,9 +92,9 @@ typedef struct ili9341 {
 	uint16_t 				height;					/*!< Screen height */
 	uint16_t 				width;					/*!< Screen width */
 	ili9341_spi_send 		spi_send;				/*!< Function send SPI */
-	ili9341_set_cs          set_cs;             	/*!< Function set pin CS */
-	ili9341_set_dc 			set_dc;					/*!< Function set pin DC */
-	ili9341_set_rst			set_rst;				/*!< Function set pin RST */
+	ili9341_set_gpio        set_cs;             	/*!< Function set pin CS */
+    ili9341_set_gpio        set_dc;             	/*!< Function set pin DC */
+    ili9341_set_gpio        set_rst;            	/*!< Function set pin RST */
 	ili9341_delay 			delay;					/*!< Function delay */
 	uint8_t 				*data;					/*!< Screen buffer */
 	lines_t 				lines[MAX_LINE_BUF];	/*!< Lines buffer */
