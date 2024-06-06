@@ -46,6 +46,7 @@ typedef struct ili9341 *ili9341_handle_t;
 typedef struct {
     uint16_t                height;             /*!< Screen height */
     uint16_t                width;              /*!< Screen width */
+    uint8_t                 *screen_buffer;     /*!< Screen buffer*/
     ili9341_spi_send        spi_send;           /*!< Function send SPI */
     ili9341_set_gpio        set_cs;             /*!< Function set pin CS */
     ili9341_set_gpio        set_dc;             /*!< Function set pin DC */
@@ -259,7 +260,7 @@ err_code_t ili9341_set_bckl_off(ili9341_handle_t handle);
  *      - Screen buffer address.
  *      - NULL: Fail.
  */
-uint8_t* ili9341_get_buffer(ili9341_handle_t handle);
+uint8_t* ili9341_get_screen_buffer(ili9341_handle_t handle);
 
 #ifdef __cplusplus
 }

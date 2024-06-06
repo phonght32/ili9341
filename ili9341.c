@@ -256,6 +256,7 @@ err_code_t ili9341_set_config(ili9341_handle_t handle, ili9341_cfg_t config)
 
 	handle->width = config.width;
 	handle->height = config.height;
+	handle->data = config.screen_buffer;
 	handle->spi_send = config.spi_send;
 	handle->set_cs = config.set_cs;
 	handle->set_dc = config.set_dc;
@@ -274,9 +275,6 @@ err_code_t ili9341_config(ili9341_handle_t handle)
 	{
 		return ERR_CODE_NULL_PTR;
 	}
-
-	/* Allocate memory for screen data buffer */
-	handle->data = calloc(handle->width * handle->height * 3, sizeof(uint8_t));
 
 	/* Allocate memory for lines buffer. These buffer will be used to store
 	   temporarily data of screen buffer */
@@ -590,7 +588,7 @@ err_code_t ili9341_set_bckl_off(ili9341_handle_t handle)
 	return ERR_CODE_SUCCESS;
 }
 
-uint8_t* ili9341_get_buffer(ili9341_handle_t handle)
+uint8_t* ili9341_get_screen_buffer(ili9341_handle_t handle)
 {
 	/* Check if handle structure is NULL */
 	if (handle == NULL)
