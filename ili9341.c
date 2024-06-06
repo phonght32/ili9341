@@ -3,7 +3,6 @@
 #include "ili9341.h"
 
 #define SPI_PARALLEL_LINES  		16
-#define MAX_LINE_BUF  				2
 
 #define ILI3941_RST_ACTIVE_LEVEL 	0
 #define ILI3941_RST_UNACTIVE_LEVEL 	1
@@ -98,8 +97,7 @@ typedef struct ili9341 {
 	ili9341_set_gpio        set_bckl;           	/*!< Function on/off LED */
 	ili9341_delay 			delay;					/*!< Function delay */
 	uint8_t 				*data;					/*!< Screen buffer */
-	lines_t 				lines[MAX_LINE_BUF];	/*!< Lines buffer */
-	uint8_t 				line_idx;				/*!< Line index */
+	lines_t 				lines;					/*!< Lines buffer */
 	uint16_t 				pos_x;					/*!< Current position x */
 	uint16_t 				pos_y;					/*!< Current position y */
 } ili9341_t;
@@ -109,7 +107,7 @@ static void convert_pixel_to_lines(ili9341_handle_t handle, int height_idx)
 	/* Convert pixel data to RGB565 format */
 	for (int idx = 0; idx < (handle->width * SPI_PARALLEL_LINES); idx++) {
 		uint8_t *p_src = handle->data + handle->width * height_idx * 3 + idx * 3;
-		uint16_t *p_desc = handle->lines[handle->line_idx].data + idx;
+		uint16_t *p_desc = handle->lines.data + idx;
 
 		uint16_t color_565 = (((uint16_t)p_src[0] & 0x00F8) << 8) |
 		                     (((uint16_t)p_src[1] & 0x00FC) << 3) |
@@ -278,10 +276,7 @@ err_code_t ili9341_config(ili9341_handle_t handle)
 
 	/* Allocate memory for lines buffer. These buffer will be used to store
 	   temporarily data of screen buffer */
-	for (uint8_t i = 0; i < MAX_LINE_BUF; i++)
-	{
-		handle->lines[i].data = calloc(handle->width * SPI_PARALLEL_LINES, sizeof(uint16_t));
-	}
+	handle->lines.data = calloc(handle->width * SPI_PARALLEL_LINES, sizeof(uint16_t));
 
 	handle->set_rst(ILI3941_RST_ACTIVE_LEVEL);
 	handle->delay(100);
@@ -325,8 +320,6 @@ err_code_t ili9341_refresh(ili9341_handle_t handle)
 		return ERR_CODE_NULL_PTR;
 	}
 
-	int sending_line;
-
 	/* Display all data from screen buffer to screen. Every cycle, SPI_PARALLEL_LINES
 	   rows will be updated */
 	for (int y = 0; y < handle->height; y += SPI_PARALLEL_LINES)
@@ -334,14 +327,8 @@ err_code_t ili9341_refresh(ili9341_handle_t handle)
 		/* Convert buffer data from RGB888 to RGB565 and put to lines buffer */
 		convert_pixel_to_lines(handle, y);
 
-		/* Get current line buffer index */
-		sending_line = handle->line_idx;
-
 		/* Display data to screen */
-		ili9341_display_lines(handle, y, SPI_PARALLEL_LINES, handle->lines[sending_line].data);
-
-		/* Toggle to refer other buffer */
-		handle->line_idx ^= 1;
+		ili9341_display_lines(handle, y, SPI_PARALLEL_LINES, handle->lines.data);
 	}
 
 	return ERR_CODE_SUCCESS;
