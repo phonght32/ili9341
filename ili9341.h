@@ -48,7 +48,6 @@ typedef struct {
     uint16_t                width;              /*!< Screen width */
     uint8_t                 *screen_buffer;     /*!< Screen buffer*/
     ili9341_spi_send        spi_send;           /*!< Function send SPI */
-    ili9341_set_gpio        set_cs;             /*!< Function set pin CS */
     ili9341_set_gpio        set_dc;             /*!< Function set pin DC */
     ili9341_set_gpio        set_rst;            /*!< Function set pin RST */
     ili9341_set_gpio        set_bckl;           /*!< Function on/off LED backlight */
@@ -90,118 +89,6 @@ err_code_t ili9341_set_config(ili9341_handle_t handle, ili9341_cfg_t config);
  *      - Others:           Fail.
  */
 err_code_t ili9341_config(ili9341_handle_t handle);
-
-/*
- * @brief   Refresh screen.
- *
- * @param   handle Handle structure.
- *
- * @return
- *      - ERR_CODE_SUCCESS: Success.
- *      - Others:           Fail.
- */
-err_code_t ili9341_refresh(ili9341_handle_t handle);
-
-/**
- * @brief   Fill screen with color.
- *
- * @param   handle Handle structure.
- * @param   color Color.
- *
- * @return
- *      - ERR_CODE_SUCCESS: Success.
- *      - Others:           Fail.
- */
-err_code_t ili9341_fill(ili9341_handle_t handle, uint32_t color);
-
-/**
- * @brief   Write character.
- *
- * @param   handle Handle structure.
- * @param   font_size Font size.
- * @param   chr Character.
- * @param   color Color.
- *
- * @return
- *      - ERR_CODE_SUCCESS: Success.
- *      - Others:           Fail.
- */
-err_code_t ili9341_write_char(ili9341_handle_t handle, font_size_t font_size, uint8_t chr, uint32_t color);
-
-/**
- * @brief   Write string.
- *
- * @param   handle Handle structure.
- * @param   font_size Font size.
- * @param   str Pointer references to the data.
- * @param   color Color.
- *
- * @return
- *      - ERR_CODE_SUCCESS: Success.
- *      - Others:           Fail.
- */
-err_code_t ili9341_write_string(ili9341_handle_t handle, font_size_t font_size, uint8_t *str, uint32_t color);
-
-/**
- * @brief   Draw pixel.
- *
- * @param   handle Handle structure.
- * @param   x Horizontal position.
- * @param   y Vertical position.
- * @param   color Color.
- *
- * @return
- *      - ERR_CODE_SUCCESS: Success.
- *      - Others:           Fail.
- */
-err_code_t ili9341_draw_pixel(ili9341_handle_t handle, uint16_t x, uint16_t y, uint32_t color);
-
-/**
- * @brief   Draw line.
- *
- * @param   handle Handle structure.
- * @param   x1 The first horizontal position.
- * @param   y1 The first vertical postion.
- * @param   x2 The second horizontal position.
- * @param   y2 The second vertical position.
- * @param   color Color.
- *
- * @return
- *      - ERR_CODE_SUCCESS: Success.
- *      - Others:           Fail.
- */
-err_code_t ili9341_draw_line(ili9341_handle_t handle, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint32_t color);
-
-/**
- * @brief   Draw rectangle.
- *
- * @param   handle Handle structure.
- * @param   x_origin Origin horizontal position.
- * @param   y_origin Origin vertical position.
- * @param   width Width in pixel.
- * @param   height Height in pixel.
- * @param   color Color.
- *
- * @return
- *      - ERR_CODE_SUCCESS: Success.
- *      - Others:           Fail.
- */
-err_code_t ili9341_draw_rectangle(ili9341_handle_t handle, uint16_t x_origin, uint16_t y_origin, uint16_t width, uint16_t height, uint32_t color);
-
-/**
- * @brief   Draw circle.
- *
- * @param   handle Handle structure.
- * @param   x_origin Origin horizontal position.
- * @param   y_origin Origin vertical position.
- * @param   radius Radius in pixel.
- * @param   color Color.
- *
- * @return
- *      - ERR_CODE_SUCCESS: Success.
- *      - Others:           Fail.
- */
-err_code_t ili9341_draw_circle(ili9341_handle_t handle, uint16_t x_origin, uint16_t y_origin, uint16_t radius, uint32_t color);
 
 /**
  * @brief   Set current position.

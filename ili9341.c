@@ -2,14 +2,8 @@
 #include "stdlib.h"
 #include "ili9341.h"
 
-#define SPI_PARALLEL_LINES  		16
-
 #define ILI3941_RST_ACTIVE_LEVEL 	0
 #define ILI3941_RST_UNACTIVE_LEVEL 	1
-
-#define ILI3941_CS_ACTIVE_LEVEL 	0
-#define ILI3941_CS_UNACTIVE_LEVEL 	1
-
 
 /**
  * @struct  LCD configuration structure.
@@ -83,10 +77,6 @@ lcd_init_cmd_t ili_init_cmds[] = {
 	{0, {0}, 0xff},
 };
 
-typedef struct {
-	uint16_t *data;
-} lines_t;
-
 typedef struct ili9341 {
 	uint16_t 				height;					/*!< Screen height */
 	uint16_t 				width;					/*!< Screen width */
@@ -97,136 +87,28 @@ typedef struct ili9341 {
 	ili9341_set_gpio        set_bckl;           	/*!< Function on/off LED */
 	ili9341_delay 			delay;					/*!< Function delay */
 	uint8_t 				*data;					/*!< Screen buffer */
-	lines_t 				lines;					/*!< Lines buffer */
 	uint16_t 				pos_x;					/*!< Current position x */
 	uint16_t 				pos_y;					/*!< Current position y */
 } ili9341_t;
 
-static void convert_pixel_to_lines(ili9341_handle_t handle, int height_idx)
-{
-	/* Convert pixel data to RGB565 format */
-	for (int idx = 0; idx < (handle->width * SPI_PARALLEL_LINES); idx++) {
-		uint8_t *p_src = handle->data + handle->width * height_idx * 3 + idx * 3;
-		uint16_t *p_desc = handle->lines.data + idx;
-
-		uint16_t color_565 = (((uint16_t)p_src[0] & 0x00F8) << 8) |
-		                     (((uint16_t)p_src[1] & 0x00FC) << 3) |
-		                     ((uint16_t)p_src[2] >> 3);
-		uint16_t swap565 = ((color_565 << 8) & 0xFF00) | ((color_565 >> 8) & 0x00FF);
-
-		*p_desc = swap565;
-	}
-}
-
-static void write_pixel(ili9341_handle_t handle, uint16_t x, uint16_t y, uint32_t color)
-{
-	uint8_t *p = handle->data + (x + y * handle->width) * 3;
-	p[0] = (color >> 16) & 0xFF;
-	p[1] = (color >> 8) & 0xFF;
-	p[2] = (color >> 0) & 0xFF;
-}
-
-static void write_line(ili9341_handle_t handle, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint32_t color)
-{
-	int32_t deltaX = abs(x2 - x1);
-	int32_t deltaY = abs(y2 - y1);
-	int32_t signX = ((x1 < x2) ? 1 : -1);
-	int32_t signY = ((y1 < y2) ? 1 : -1);
-	int32_t error = deltaX - deltaY;
-	int32_t error2;
-
-	write_pixel(handle, x2, y2, color);
-
-	while ((x1 != x2) || (y1 != y2))
-	{
-		write_pixel(handle, x1, y1, color);
-
-		error2 = error * 2;
-		if (error2 > -deltaY) {
-			error -= deltaY;
-			x1 += signX;
-		} else {
-			/*nothing to do*/
-		}
-
-		if (error2 < deltaX) {
-			error += deltaX;
-			y1 += signY;
-		} else {
-			/*nothing to do*/
-		}
-	}
-}
-
 static err_code_t ili9341_write_cmd(ili9341_handle_t handle, uint8_t cmd)
 {
-	if (handle->set_cs != NULL)
-	{
-		handle->set_cs(ILI3941_CS_ACTIVE_LEVEL);
-	}
-
 	/* DC level equal to 0 when write SPI command */
 	handle->set_dc(0);
 
 	/* Transfer command */
 	handle->spi_send(&cmd, 1);
 
-	if (handle->set_cs != NULL)
-	{
-		handle->set_cs(ILI3941_CS_UNACTIVE_LEVEL);
-	}
-
 	return ERR_CODE_SUCCESS;
 }
 
 static err_code_t ili9341_write_data(ili9341_handle_t handle, uint8_t *data, uint32_t len)
 {
-	if (handle->set_cs != NULL)
-	{
-		handle->set_cs(ILI3941_CS_ACTIVE_LEVEL);
-	}
-
 	/* DC level equal to 1 when write SPI data */
 	handle->set_dc(1);
 
 	/* Transfer data */
 	handle->spi_send(data, len);
-
-	if (handle->set_cs != NULL)
-	{
-		handle->set_cs(ILI3941_CS_UNACTIVE_LEVEL);
-	}
-
-	return ERR_CODE_SUCCESS;
-}
-
-static err_code_t ili9341_display_lines(ili9341_handle_t handle, uint16_t ypos, uint16_t parallel_line, uint16_t *lines_data)
-{
-	uint8_t buf[4] = {0, 0, 0, 0};
-
-	/* Command set column address */
-	ili9341_write_cmd(handle, 0x2A);
-
-	buf[0] = 0;									/* Start column high */
-	buf[1] = 0;									/* Start column low */
-	buf[2] = handle->width >> 8;				/* End column high */
-	buf[3] = handle->width & 0xFF;				/* End column low */
-	ili9341_write_data(handle, buf, 4);
-
-	/* Command set page address */
-	ili9341_write_cmd(handle, 0x2B);
-
-	buf[0] = ypos >> 8;							/* Start page high */
-	buf[1] = ypos & 0xFF;						/* Start page low */
-	buf[2] = (ypos + parallel_line) >> 8;		/* End page high */
-	buf[3] = (ypos + parallel_line) & 0xff;		/* End page low */
-	ili9341_write_data(handle, buf, 4);
-
-	/* Command set data */
-	ili9341_write_cmd(handle, 0x2C);
-
-	/* Transfer screen data */
-	ili9341_write_data(handle, (uint8_t*)lines_data, handle->width * sizeof(uint16_t) * parallel_line);
 
 	return ERR_CODE_SUCCESS;
 }
@@ -274,10 +156,6 @@ err_code_t ili9341_config(ili9341_handle_t handle)
 		return ERR_CODE_NULL_PTR;
 	}
 
-	/* Allocate memory for lines buffer. These buffer will be used to store
-	   temporarily data of screen buffer */
-	handle->lines.data = calloc(handle->width * SPI_PARALLEL_LINES, sizeof(uint16_t));
-
 	handle->set_rst(ILI3941_RST_ACTIVE_LEVEL);
 	handle->delay(100);
 	handle->set_rst(ILI3941_RST_UNACTIVE_LEVEL);
@@ -308,209 +186,6 @@ err_code_t ili9341_config(ili9341_handle_t handle)
 
 		cmd++;
 	}
-
-	return ERR_CODE_SUCCESS;
-}
-
-err_code_t ili9341_refresh(ili9341_handle_t handle)
-{
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
-
-	/* Display all data from screen buffer to screen. Every cycle, SPI_PARALLEL_LINES
-	   rows will be updated */
-	for (int y = 0; y < handle->height; y += SPI_PARALLEL_LINES)
-	{
-		/* Convert buffer data from RGB888 to RGB565 and put to lines buffer */
-		convert_pixel_to_lines(handle, y);
-
-		/* Display data to screen */
-		ili9341_display_lines(handle, y, SPI_PARALLEL_LINES, handle->lines.data);
-	}
-
-	return ERR_CODE_SUCCESS;
-}
-
-err_code_t ili9341_fill(ili9341_handle_t handle, uint32_t color)
-{
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
-
-	/* Write RGB888 color to data buffer */
-	for (int idx = 0; idx < (handle->width * handle->height); idx++)
-	{
-		uint8_t *p = handle->data + idx * 3;
-		p[0] = (color >> 16) & 0xFF;
-		p[1] = (color >> 8) & 0xFF;
-		p[2] = (color >> 0) & 0xFF;
-	}
-
-	return ERR_CODE_SUCCESS;
-}
-
-err_code_t ili9341_write_char(ili9341_handle_t handle, font_size_t font_size, uint8_t chr, uint32_t color)
-{
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
-
-	/* Get font data */
-	font_t font;
-	if (get_font(chr, font_size, &font) <= 0)
-	{
-		return ERR_CODE_FAIL;
-	}
-
-	/* Write character pixel data to buffer */
-	uint16_t num_byte_per_row = font.data_len / font.height;
-	for (uint16_t height_idx = 0; height_idx < font.height; height_idx ++)
-	{
-		for ( uint8_t byte_idx = 0; byte_idx < num_byte_per_row; byte_idx++)
-		{
-			for (uint16_t width_idx = 0; width_idx < 8; width_idx++)
-			{
-				uint16_t x = handle->pos_x + width_idx + byte_idx * 8;
-				uint16_t y = handle->pos_y + height_idx;
-				if (((font.data[height_idx * num_byte_per_row + byte_idx] << width_idx) & 0x80) == 0x80)
-				{
-					write_pixel(handle, x, y, color);
-				}
-			}
-		}
-	}
-	handle->pos_x += font.width + num_byte_per_row;
-
-	return ERR_CODE_SUCCESS;
-}
-
-err_code_t ili9341_write_string(ili9341_handle_t handle, font_size_t font_size, uint8_t *str, uint32_t color)
-{
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
-
-	while (*str) {
-		font_t font;
-		if (get_font(*str, font_size, &font) <= 0)
-		{
-			return ERR_CODE_FAIL;
-		}
-
-		uint16_t num_byte_per_row = font.data_len / font.height;
-		for (uint16_t height_idx = 0; height_idx < font.height; height_idx ++)
-		{
-			for ( uint16_t byte_idx = 0; byte_idx < num_byte_per_row; byte_idx++)
-			{
-				for (uint16_t width_idx = 0; width_idx < 8; width_idx++)
-				{
-					uint16_t x = handle->pos_x + width_idx + byte_idx * 8;
-					uint16_t y = handle->pos_y + height_idx;
-					if (((font.data[height_idx * num_byte_per_row + byte_idx] << width_idx) & 0x80) == 0x80)
-					{
-						write_pixel(handle, x, y, color);
-					}
-				}
-			}
-		}
-		handle->pos_x += font.width + 1;
-		str++;
-	}
-
-	return ERR_CODE_SUCCESS;
-}
-
-err_code_t ili9341_draw_pixel(ili9341_handle_t handle, uint16_t x, uint16_t y, uint32_t color)
-{
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
-
-	write_pixel(handle, x, y, color);
-
-	return ERR_CODE_SUCCESS;
-}
-
-err_code_t ili9341_draw_line(ili9341_handle_t handle, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint32_t color)
-{
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
-
-	write_line(handle, x1, y1, x2, y2, color);
-
-	return ERR_CODE_SUCCESS;
-}
-
-err_code_t ili9341_draw_rectangle(ili9341_handle_t handle, uint16_t x_origin, uint16_t y_origin, uint16_t width, uint16_t height, uint32_t color)
-{
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
-
-	write_line(handle, x_origin, y_origin, x_origin + width, y_origin, color);
-	write_line(handle, x_origin + width, y_origin, x_origin + width, y_origin + height, color);
-	write_line(handle, x_origin + width, y_origin + height, x_origin, y_origin + height, color);
-	write_line(handle, x_origin, y_origin + height, x_origin, y_origin, color);
-
-	return ERR_CODE_SUCCESS;
-}
-
-err_code_t ili9341_draw_circle(ili9341_handle_t handle, uint16_t x_origin, uint16_t y_origin, uint16_t radius, uint32_t color)
-{
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
-
-	int32_t x = -radius;
-	int32_t y = 0;
-	int32_t err = 2 - 2 * radius;
-	int32_t e2;
-
-	do {
-		write_pixel(handle, x_origin - x, y_origin + y, color);
-		write_pixel(handle, x_origin + x, y_origin + y, color);
-		write_pixel(handle, x_origin + x, y_origin - y, color);
-		write_pixel(handle, x_origin - x, y_origin - y, color);
-
-		e2 = err;
-		if (e2 <= y) {
-			y++;
-			err = err + (y * 2 + 1);
-			if (-x == y && e2 <= x) {
-				e2 = 0;
-			}
-			else {
-				/*nothing to do*/
-			}
-		} else {
-			/*nothing to do*/
-		}
-
-		if (e2 > x) {
-			x++;
-			err = err + (x * 2 + 1);
-		} else {
-			/*nothing to do*/
-		}
-	} while (x <= 0);
 
 	return ERR_CODE_SUCCESS;
 }
