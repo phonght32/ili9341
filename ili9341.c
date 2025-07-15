@@ -81,7 +81,6 @@ typedef struct ili9341 {
 	uint16_t 				height;					/*!< Screen height */
 	uint16_t 				width;					/*!< Screen width */
 	ili9341_spi_send 		spi_send;				/*!< Function send SPI */
-	ili9341_set_gpio        set_cs;             	/*!< Function set pin CS */
 	ili9341_set_gpio        set_dc;             	/*!< Function set pin DC */
 	ili9341_set_gpio        set_rst;            	/*!< Function set pin RST */
 	ili9341_set_gpio        set_bckl;           	/*!< Function on/off LED */
@@ -138,12 +137,10 @@ err_code_t ili9341_set_config(ili9341_handle_t handle, ili9341_cfg_t config)
 	handle->height = config.height;
 	handle->data = config.screen_buffer;
 	handle->spi_send = config.spi_send;
-	handle->set_cs = config.set_cs;
 	handle->set_dc = config.set_dc;
 	handle->set_rst = config.set_rst;
 	handle->set_bckl = config.set_bckl;
 	handle->delay = config.delay;
-
 
 	return ERR_CODE_SUCCESS;
 }
@@ -192,16 +189,47 @@ err_code_t ili9341_config(ili9341_handle_t handle)
 
 err_code_t ili9341_set_position(ili9341_handle_t handle, uint16_t x, uint16_t y)
 {
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
+    /* Check if handle structure is NULL */
+    if (handle == NULL)
+    {
+        return ERR_CODE_NULL_PTR;
+    }
 
-	handle->pos_x = x;
-	handle->pos_y = y;
+    uint8_t cmd;
+    uint8_t data[4];
 
-	return ERR_CODE_SUCCESS;
+    // Set column address (X)
+    cmd = 0x2A; // Column Address Set
+    data[0] = x >> 8;       // X start high byte
+    data[1] = x & 0xFF;     // X start low byte
+    data[2] = (handle->width - 1) >> 8;   // X end high byte
+    data[3] = (handle->width - 1) & 0xFF; // X end low byte
+
+    handle->set_dc(0); // Command mode
+    handle->spi_send(&cmd, 1);
+    handle->set_dc(1); // Data mode
+    handle->spi_send(data, 4);
+
+    // Set page address (Y)
+    cmd = 0x2B; // Page Address Set
+    data[0] = y >> 8;       // Y start high byte
+    data[1] = y & 0xFF;     // Y start low byte
+    data[2] = (handle->height - 1) >> 8;   // Y end high byte
+    data[3] = (handle->height - 1) & 0xFF; // Y end low byte
+
+    handle->set_dc(0);
+    handle->spi_send(&cmd, 1);
+    handle->set_dc(1);
+    handle->spi_send(data, 4);
+
+    // Write Memory Start
+    cmd = 0x2C;
+    handle->set_dc(0);
+    handle->spi_send(&cmd, 1);
+    handle->set_dc(1);
+    // Pixel data will follow...
+
+    return ERR_CODE_SUCCESS;
 }
 
 err_code_t ili9341_get_position(ili9341_handle_t handle, uint16_t *x, uint16_t *y)
