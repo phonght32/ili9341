@@ -29,7 +29,6 @@ extern "C" {
 
 #include "stdint.h"
 #include "err_code.h"
-#include "fonts.h"
 
 typedef err_code_t (*ili9341_spi_send)(uint8_t *buf_send, uint32_t len);
 typedef err_code_t (*ili9341_set_gpio)(uint8_t level);

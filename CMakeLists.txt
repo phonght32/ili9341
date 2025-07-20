@@ -7,5 +7,5 @@ if(ESP_PLATFORM)
 
     idf_component_register(SRCS "${srcs}"
                            INCLUDE_DIRS ${includes}
-                           REQUIRES mcu_port fonts)
+                           REQUIRES mcu_port)
 endif()
