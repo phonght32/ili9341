@@ -187,7 +187,7 @@ err_code_t ili9341_config(ili9341_handle_t handle)
 	return ERR_CODE_SUCCESS;
 }
 
-err_code_t ili9341_set_position(ili9341_handle_t handle, uint16_t x, uint16_t y)
+err_code_t ili9341_set_position(ili9341_handle_t handle, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
 	/* Check if handle structure is NULL */
 	if (handle == NULL)
@@ -202,20 +202,20 @@ err_code_t ili9341_set_position(ili9341_handle_t handle, uint16_t x, uint16_t y)
 	cmd = 0x2A; 							/*!< Column Address Set */
 	ili9341_write_cmd(handle, cmd);
 
-	data[0] = x >> 8;						/*!< X start high byte */
-	data[1] = x & 0xFF;						/*!< X start low byte */
-	data[2] = (handle->width - 1) >> 8;		/*!< X end high byte */
-	data[3] = (handle->width - 1) & 0xFF;	/*!< X end low byte */
+	data[0] = (x1 >> 8) & 0xFF;						/*!< X start high byte */
+	data[1] = x1 & 0xFF;					/*!< X start low byte */
+	data[2] = (x2 >> 8) & 0xFF;						/*!< X end high byte */
+	data[3] = x2 & 0xFF;					/*!< X end low byte */
 	ili9341_write_data(handle, data, 4);
 
 	/* Set page address (Y) */
 	cmd = 0x2B;								/*!< Page Address Set */
 	ili9341_write_cmd(handle, cmd);
 
-	data[0] = y >> 8; 						/*!< Y start high byte */
-	data[1] = y & 0xFF; 					/*!< Y start low byte */
-	data[2] = (handle->height - 1) >> 8; 	/*!< Y end high byte */
-	data[3] = (handle->height - 1) & 0xFF;	/*!< Y end low byte */
+	data[0] = (y1 >> 8) & 0xFF; 						/*!< Y start high byte */
+	data[1] = y1 & 0xFF; 					/*!< Y start low byte */
+	data[2] = (y2 >> 8) & 0xFF; 						/*!< Y end high byte */
+	data[3] = y2 & 0xFF;					/*!< Y end low byte */
 	ili9341_write_data(handle, data, 4);
 
 	/* Write Memory Start */
@@ -223,20 +223,6 @@ err_code_t ili9341_set_position(ili9341_handle_t handle, uint16_t x, uint16_t y)
 	ili9341_write_cmd(handle, cmd);
 
 	handle->set_dc(1);
-
-	return ERR_CODE_SUCCESS;
-}
-
-err_code_t ili9341_get_position(ili9341_handle_t handle, uint16_t *x, uint16_t *y)
-{
-	/* Check if handle structure is NULL */
-	if (handle == NULL)
-	{
-		return ERR_CODE_NULL_PTR;
-	}
-
-	*x = handle->pos_x;
-	*y = handle->pos_y;
 
 	return ERR_CODE_SUCCESS;
 }

@@ -101,20 +101,7 @@ err_code_t ili9341_config(ili9341_handle_t handle);
  *      - ERR_CODE_SUCCESS: Success.
  *      - Others:           Fail.
  */
-err_code_t ili9341_set_position(ili9341_handle_t handle, uint16_t x, uint16_t y);
-
-/**
- * @brief   Get current position.
- *
- * @param   handle Handle structure.
- * @param   x Pointer references to the horizontal position.
- * @param   y Pointer references to the vertical position.
- *
- * @return
- *      - ERR_CODE_SUCCESS: Success.
- *      - Others:           Fail.
- */
-err_code_t ili9341_get_position(ili9341_handle_t handle, uint16_t *x, uint16_t *y);
+err_code_t ili9341_set_position(ili9341_handle_t handle, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 
 /**
  * @brief   Turn on LED backlight.
